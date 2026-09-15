@@ -1,12 +1,16 @@
-// Package memory provides an isolated, synchronized workspace registry.
+// Package memory provides an isolated, synchronized Workspace registry. It
+// satisfies both application ports and is the reference adapter for the
+// reusable workspace-memory scenarios.
 package memory
 
 import (
+	"context"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/0xsj/atelier-wails/internal/workspace/domain"
+	faults "github.com/0xsj/atelier-wails/pkg/errors"
 	"github.com/0xsj/atelier-wails/pkg/id"
 )
 
@@ -16,16 +20,18 @@ type Store struct {
 }
 
 func New() *Store { return &Store{items: make(map[id.ID]domain.Workspace)} }
-func (s *Store) Register(workspaceID id.ID, name, location string, at time.Time) (domain.RegisterResult, error) {
+
+func (s *Store) Register(ctx context.Context, workspaceID id.ID, name, location string, at time.Time) (domain.RegisterResult, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.RegisterResult{}, canceled(err)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, exists := s.items[workspaceID]; exists {
-		return domain.RegisterResult{}, conflict()
+		return domain.RegisterResult{}, conflict("workspace.id_taken")
 	}
-	for _, item := range s.items {
-		if item.Status == domain.Active && item.Location == location {
-			return domain.RegisterResult{}, conflict()
-		}
+	if s.activeLocationTaken(location, workspaceID) {
+		return domain.RegisterResult{}, conflict("workspace.location_taken")
 	}
 	result, err := domain.Register(workspaceID, name, location, at)
 	if err != nil {
@@ -34,97 +40,124 @@ func (s *Store) Register(workspaceID id.ID, name, location string, at time.Time)
 	s.items[workspaceID] = result.Workspace
 	return result, nil
 }
-func (s *Store) Read(workspaceID id.ID) (domain.Workspace, bool, error) {
+
+func (s *Store) Read(ctx context.Context, workspaceID id.ID) (domain.Workspace, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.Workspace{}, false, canceled(err)
+	}
 	if workspaceID.IsZero() {
-		return domain.Workspace{}, false, invalid()
+		return domain.Workspace{}, false, invalid("workspace.invalid_id")
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	value, ok := s.items[workspaceID]
 	return value, ok, nil
 }
-func (s *Store) List(filter domain.ListFilter) ([]domain.Workspace, error) {
+
+func (s *Store) List(ctx context.Context, filter domain.ListFilter) ([]domain.Workspace, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, canceled(err)
+	}
 	if !filter.Valid() {
-		return nil, invalid()
+		return nil, invalid("workspace.invalid_filter")
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	values := make([]domain.Workspace, 0, len(s.items))
 	for _, item := range s.items {
-		if filter == domain.ActiveOnly && item.Status != domain.Active {
+		if filter == domain.ActiveOnly && item.Status() != domain.Active {
 			continue
 		}
 		values = append(values, item)
 	}
-	sort.Slice(values, func(i, j int) bool { return values[i].ID.String() < values[j].ID.String() })
+	sort.Slice(values, func(i, j int) bool { return values[i].ID().String() < values[j].ID().String() })
 	return values, nil
 }
-func (s *Store) Rename(workspaceID id.ID, name string, expected domain.Expected, at time.Time) (domain.MutationResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	current, ok := s.items[workspaceID]
-	if !ok {
-		return domain.MutationResult{}, nil
+
+func (s *Store) Rename(ctx context.Context, workspaceID id.ID, name string, expected domain.Expected, at time.Time) (domain.MutationResult, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.MutationResult{}, false, canceled(err)
 	}
-	result, err := domain.Rename(current, name, expected, at)
-	if err != nil || result.Status == domain.Unchanged {
-		return result, err
-	}
-	s.items[workspaceID] = result.Workspace
-	return result, nil
+	return s.mutate(workspaceID, func(current domain.Workspace) (domain.MutationResult, error) {
+		return domain.Rename(current, name, expected, at)
+	})
 }
-func (s *Store) Archive(workspaceID id.ID, expected domain.Expected, at time.Time) (domain.MutationResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	current, ok := s.items[workspaceID]
-	if !ok {
-		return domain.MutationResult{}, nil
+
+func (s *Store) Archive(ctx context.Context, workspaceID id.ID, expected domain.Expected, at time.Time) (domain.MutationResult, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.MutationResult{}, false, canceled(err)
 	}
-	result, err := domain.Archive(current, expected, at)
-	if err != nil || result.Status == domain.Unchanged {
-		return result, err
-	}
-	s.items[workspaceID] = result.Workspace
-	return result, nil
+	return s.mutate(workspaceID, func(current domain.Workspace) (domain.MutationResult, error) {
+		return domain.Archive(current, expected, at)
+	})
 }
-func (s *Store) Restore(workspaceID id.ID, expected domain.Expected, at time.Time) (domain.MutationResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	current, ok := s.items[workspaceID]
-	if !ok {
-		return domain.MutationResult{}, nil
+
+func (s *Store) Restore(ctx context.Context, workspaceID id.ID, expected domain.Expected, at time.Time) (domain.MutationResult, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.MutationResult{}, false, canceled(err)
 	}
-	if current.Status == domain.Archived {
-		for otherID, item := range s.items {
-			if otherID != workspaceID && item.Status == domain.Active && item.Location == current.Location {
-				return domain.MutationResult{}, conflict()
-			}
+	return s.mutate(workspaceID, func(current domain.Workspace) (domain.MutationResult, error) {
+		if current.Status() == domain.Archived && s.activeLocationTaken(current.Location(), workspaceID) {
+			return domain.MutationResult{}, conflict("workspace.location_taken")
 		}
-	}
-	result, err := domain.Restore(current, expected, at)
-	if err != nil || result.Status == domain.Unchanged {
-		return result, err
-	}
-	s.items[workspaceID] = result.Workspace
-	return result, nil
+		return domain.Restore(current, expected, at)
+	})
 }
-func (s *Store) Forget(workspaceID id.ID, expected domain.Expected) (domain.ForgetResult, error) {
+
+func (s *Store) Forget(ctx context.Context, workspaceID id.ID, expected domain.Expected) (domain.ForgetResult, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return domain.ForgetResult{}, false, canceled(err)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	current, ok := s.items[workspaceID]
 	if !ok {
-		return domain.ForgetResult{}, nil
+		return domain.ForgetResult{}, false, nil
 	}
 	result, err := domain.Forget(current, expected)
-	if err != nil || !result.Removed {
-		return result, err
+	if err != nil {
+		return domain.ForgetResult{}, true, err
 	}
 	delete(s.items, workspaceID)
-	return result, nil
+	return result, true, nil
 }
-func invalid() error  { return &storeFailure{"workspace: invalid input"} }
-func conflict() error { return &storeFailure{"workspace: conflict"} }
 
-type storeFailure struct{ message string }
+// mutate runs one decision under the write lock and commits a change.
+func (s *Store) mutate(workspaceID id.ID, decide func(domain.Workspace) (domain.MutationResult, error)) (domain.MutationResult, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	current, ok := s.items[workspaceID]
+	if !ok {
+		return domain.MutationResult{}, false, nil
+	}
+	result, err := decide(current)
+	if err != nil {
+		return domain.MutationResult{}, true, err
+	}
+	if result.Status == domain.Changed {
+		s.items[workspaceID] = result.Workspace
+	}
+	return result, true, nil
+}
 
-func (e *storeFailure) Error() string { return e.message }
+// activeLocationTaken must be called with the lock held.
+func (s *Store) activeLocationTaken(location string, except id.ID) bool {
+	for otherID, item := range s.items {
+		if otherID != except && item.Status() == domain.Active && item.Location() == location {
+			return true
+		}
+	}
+	return false
+}
+
+func invalid(typ string) error {
+	return faults.New(faults.Invalid, "invalid workspace input").WithType(typ)
+}
+
+func conflict(typ string) error {
+	return faults.New(faults.Conflict, "workspace already registered").WithType(typ)
+}
+
+func canceled(cause error) error {
+	return faults.Wrap(cause, faults.Canceled, "workspace operation canceled")
+}

@@ -31,9 +31,15 @@ specified now so their boundaries are visible, but their implementations should
 wait for a concrete UI or workflow consumer. No generic repository, event bus,
 database package or cross-context transaction manager is implied by these docs.
 
+The Preferences desktop wire shapes, decode vocabulary and commit rule are
+specified in [internal/preferences/transport/desktop/CONTRACT.md](internal/preferences/transport/desktop/CONTRACT.md);
+the frontend kernel and platform codecs validate against those shapes.
+
 ## Shared storage direction
 
 SQLite is the default candidate for local metadata, indexes, jobs and history.
+Preferences persist as one atomically replaced JSON document instead; see
+[the storage decision](decisions/2026-09-12-preferences-file-persistence.md).
 User files stay on the filesystem. Postgres remains a future server adapter for
 shared workspaces, remote workers or synchronization; it is not a dependency of
 these domain contracts.

@@ -12,10 +12,11 @@ eligible for assignment when its dependencies are complete, not implemented.
 assignable: it needs a contract/task or another design decision. A coordinator
 records the assigned worker and changes ready → in_progress before dispatch.
 
-Read [work/BUILD_ORDER.md](work/BUILD_ORDER.md). The first errors, clock and secret
+Read [work/BUILD_ORDER.md](work/BUILD_ORDER.md) and the resume
+instructions in [work/STATUS.md](work/STATUS.md). The first errors, clock and secret
 leaves have no peer dependencies and disjoint files. Their implementation can
 run independently; their integrations and root wiring stay with the coordinator.
-IDs and config have since been specified and completed; logger is also complete and file IO remains planned. A directory's existence
+IDs, config, logger and file IO have since been specified and completed. A directory's existence
 is not permission to invent its semantics. These small leaves are a calibration
 batch; preferences is the first complete domain slice after its contract is set.
 
@@ -52,8 +53,9 @@ matching summaries alone. Record integration evidence before marking complete.
 If a dependency changes its API or behavior, re-evaluate dependent evidence.
 
 The manifest verifier validates metadata, references, dependency cycles and task
-readiness. It does not enforce source imports, execute tests, authenticate evidence,
-or automatically approve completion. Source architecture checks remain future work.
+readiness. It does not execute tests, authenticate evidence or automatically approve
+completion. `python3 tools/architecture/check_imports.py` enforces the layer
+import rules in tools/architecture/RULES.md; run both before marking complete.
 
 ## First-batch limits
 

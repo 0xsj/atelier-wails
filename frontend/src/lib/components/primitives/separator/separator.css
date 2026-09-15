@@ -1,5 +1,17 @@
 @layer primitive {
-	.atelier-separator { flex: none; background: var(--line); }
-	.atelier-separator[data-orientation='horizontal'] { inline-size: 100%; block-size: 1px; }
-	.atelier-separator[data-orientation='vertical'] { inline-size: 1px; block-size: 100%; min-block-size: var(--control-md); }
+	.atelier-separator {
+		flex: none;
+		background: var(--line);
+	}
+
+	.atelier-separator[data-orientation='horizontal'] {
+		inline-size: 100%;
+		block-size: 1px;
+	}
+
+	.atelier-separator[data-orientation='vertical'] {
+		inline-size: 1px;
+		block-size: 100%;
+		min-block-size: var(--control-md);
+	}
 }

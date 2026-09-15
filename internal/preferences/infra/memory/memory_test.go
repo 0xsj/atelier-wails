@@ -1,77 +1,43 @@
 package memory_test
 
 import (
-	"sync"
+	"context"
 	"testing"
 
 	"github.com/0xsj/atelier-wails/internal/preferences/domain"
 	"github.com/0xsj/atelier-wails/internal/preferences/infra/memory"
+	"github.com/0xsj/atelier-wails/internal/preferences/infra/storetest"
+	faults "github.com/0xsj/atelier-wails/pkg/errors"
 )
 
-func TestConditionalOperationsAndOrdering(t *testing.T) {
-	store := memory.New()
-	scope := domain.Global()
-	first, _ := domain.NewKey("z.last")
-	second, _ := domain.NewKey("a.first")
-	one, _ := domain.Text("one")
-	two, _ := domain.Text("two")
-	created, err := store.Replace(scope, first, one, domain.ExpectAbsent())
-	if err != nil || created.Entry.Revision != 1 {
-		t.Fatal(err)
-	}
-	if _, err := store.Replace(scope, first, two, domain.ExpectAbsent()); err == nil {
-		t.Fatal("blind create accepted")
-	}
-	expected, _ := domain.ExpectRevision(1)
-	if _, err := store.Replace(scope, second, two, expected); err == nil {
-		t.Fatal("stale create accepted")
-	}
-	if _, err := store.Replace(scope, first, one, expected); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := store.Replace(scope, first, two, expected); err != nil {
-		t.Fatal(err)
-	}
-	items, err := store.List(scope)
-	if err != nil || len(items) != 1 || items[0].Key != first {
-		t.Fatal(items, err)
-	}
-	removed, err := store.Remove(scope, first, mustRevision(2))
-	if err != nil || !removed.Removed {
-		t.Fatal(err)
-	}
-	if _, found, err := store.Read(scope, first); err != nil || found {
-		t.Fatal("remove persisted")
-	}
+// TestContract runs M01–M12 from the shared suite against fresh instances.
+func TestContract(t *testing.T) {
+	storetest.Run(t, func(*testing.T) storetest.Store { return memory.New() })
 }
 
-func TestConcurrentCreateHasOneWinner(t *testing.T) {
+// Go-only guard: zero inputs are refused with the domain categories before
+// the map is touched.
+func TestInvalidReadInputs(t *testing.T) {
+	ctx := context.Background()
 	store := memory.New()
 	key, _ := domain.NewKey("editor.theme")
-	value, _ := domain.Text("dark")
-	var wg sync.WaitGroup
-	twins := make(chan error, 2)
-	for range 2 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			_, err := store.Replace(domain.Global(), key, value, domain.ExpectAbsent())
-			twins <- err
-		}()
+	_, _, err := store.Read(ctx, domain.Scope{}, key)
+	if !faults.IsKind(err, faults.Invalid) || faults.DiagnosticTypeOf(err) != "preferences.invalid_scope" {
+		t.Fatalf("zero scope: %v", err)
 	}
-	wg.Wait()
-	close(twins)
-	var successes, conflicts int
-	for err := range twins {
-		if err == nil {
-			successes++
-		} else {
-			conflicts++
-		}
+	_, _, err = store.Read(ctx, domain.Global(), domain.Key{})
+	if !faults.IsKind(err, faults.Invalid) || faults.DiagnosticTypeOf(err) != "preferences.invalid_key" {
+		t.Fatalf("zero key: %v", err)
 	}
-	if successes != 1 || conflicts != 1 {
-		t.Fatalf("successes=%d conflicts=%d", successes, conflicts)
+	_, err = store.List(ctx, domain.Scope{})
+	if !faults.IsKind(err, faults.Invalid) || faults.DiagnosticTypeOf(err) != "preferences.invalid_scope" {
+		t.Fatalf("zero list scope: %v", err)
+	}
+	_, err = store.Replace(ctx, domain.Global(), domain.Key{}, domain.Bool(true), domain.ExpectAbsent())
+	if !faults.IsKind(err, faults.Invalid) || faults.DiagnosticTypeOf(err) != "preferences.invalid_key" {
+		t.Fatalf("zero replace key: %v", err)
+	}
+	if entries, _ := store.List(ctx, domain.Global()); len(entries) != 0 {
+		t.Fatal("refused write left state")
 	}
 }
-
-func mustRevision(n uint64) domain.Expected { v, _ := domain.ExpectRevision(n); return v }

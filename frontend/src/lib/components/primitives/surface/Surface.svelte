@@ -17,9 +17,24 @@
 		class?: string;
 	}
 
-	let { tone = 'panel', padding = 'md', border = 'default', radius = 'md', children, class: className, ...rest }: Props = $props();
+	let {
+		tone = 'panel',
+		padding = 'md',
+		border = 'default',
+		radius = 'md',
+		children,
+		class: className,
+		...rest
+	}: Props = $props();
 </script>
 
-<div {...rest} class="atelier-surface {className ?? ''}" data-tone={tone} data-padding={padding} data-border={border} data-radius={radius}>
+<div
+	{...rest}
+	class="atelier-surface {className ?? ''}"
+	data-tone={tone}
+	data-padding={padding}
+	data-border={border}
+	data-radius={radius}
+>
 	{@render children?.()}
 </div>

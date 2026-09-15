@@ -4,6 +4,7 @@
 	import './forms.css';
 
 	interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'class'> { leading?: Snippet; trailing?: Snippet; children: Snippet; class?: string; }
+
 	let { leading, trailing, children, class: className, ...rest }: Props = $props();
 </script>
 

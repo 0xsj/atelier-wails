@@ -1,17 +1,25 @@
 @layer primitive {
-	.atelier-surface { min-inline-size: 0; background: var(--surface-panel); color: var(--ink); }
+	.atelier-surface {
+		min-inline-size: 0;
+		background: var(--surface-panel);
+		color: var(--ink);
+	}
+
 	.atelier-surface[data-tone='ground'] { background: var(--surface-ground); }
 	.atelier-surface[data-tone='sunk'] { background: var(--surface-sunk); }
 	.atelier-surface[data-tone='panel'] { background: var(--surface-panel); }
 	.atelier-surface[data-tone='raised'] { background: var(--surface-raised); }
 	.atelier-surface[data-tone='selected'] { background: var(--surface-selected); }
+
 	.atelier-surface[data-padding='none'] { padding: 0; }
 	.atelier-surface[data-padding='sm'] { padding: var(--space-4); }
 	.atelier-surface[data-padding='md'] { padding: var(--space-7); }
 	.atelier-surface[data-padding='lg'] { padding: var(--space-9); }
+
 	.atelier-surface[data-border='none'] { border: 0; }
 	.atelier-surface[data-border='default'] { border: 1px solid var(--line); }
 	.atelier-surface[data-border='strong'] { border: 1px solid var(--line-strong); }
+
 	.atelier-surface[data-radius='none'] { border-radius: 0; }
 	.atelier-surface[data-radius='sm'] { border-radius: var(--radius-1); }
 	.atelier-surface[data-radius='md'] { border-radius: var(--radius-3); }

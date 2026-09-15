@@ -1,0 +1,7 @@
+@layer primitive {
+	.atelier-icon { display: inline-block; flex: 0 0 auto; inline-size: 16px; block-size: 16px; vertical-align: -0.2em; color: inherit; }
+	.atelier-icon[data-size='xs'] { inline-size: 12px; block-size: 12px; }
+	.atelier-icon[data-size='sm'] { inline-size: 14px; block-size: 14px; }
+	.atelier-icon[data-size='md'] { inline-size: 16px; block-size: 16px; }
+	.atelier-icon[data-size='lg'] { inline-size: 20px; block-size: 20px; }
+}

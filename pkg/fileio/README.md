@@ -1,6 +1,7 @@
 # fileio
 
-Effectful reusable file primitives; consuming applications own save/conflict rules.
+Effectful reusable file primitives: read with absence, atomic durable replace,
+ensure directory. Consuming applications own save and conflict rules.
 
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Implemented against [CONTRACT.md](CONTRACT.md) revision 1 (task native-fileio).
+The first consumer is the preferences persistent adapter.

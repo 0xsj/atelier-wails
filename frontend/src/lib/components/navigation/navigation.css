@@ -48,4 +48,14 @@
 	.atelier-breadcrumb a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 	.atelier-breadcrumb [aria-current='page'] { color: var(--ink); font-weight: var(--weight-medium); }
 	.atelier-breadcrumb__separator { color: var(--ink-subtle); }
+
+	.atelier-toolbar { display: flex; align-items: center; gap: var(--space-2); min-inline-size: 0; min-block-size: var(--control-lg); padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--surface-panel); }
+	.atelier-toolbar[data-orientation='vertical'] { flex-direction: column; align-items: stretch; inline-size: max-content; min-block-size: 0; }
+	.atelier-toolbar__group { display: flex; align-items: center; gap: 1px; padding: 1px; border-radius: var(--radius-2); background: var(--surface-sunk); }
+	.atelier-toolbar[data-orientation='vertical'] .atelier-toolbar__group { flex-direction: column; align-items: stretch; }
+	.atelier-toolbar__button, .atelier-toolbar__item { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-inline-size: var(--control-sm); min-block-size: var(--control-sm); padding-inline: var(--space-3); border: 1px solid transparent; border-radius: var(--radius-1); background: transparent; color: var(--ink-muted); font-size: var(--text-11); font-weight: var(--weight-medium); line-height: 1; white-space: nowrap; transition: background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard); }
+	.atelier-toolbar__button:hover:not(:disabled), .atelier-toolbar__item:hover:not(:disabled) { background: var(--surface-hover); color: var(--ink); }
+	.atelier-toolbar__item[data-state='on'] { background: var(--surface-raised); color: var(--ink); box-shadow: 0 0 0 1px var(--line-strong); }
+	.atelier-toolbar__button:focus-visible, .atelier-toolbar__item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+	.atelier-toolbar__button:disabled, .atelier-toolbar__item:disabled { cursor: not-allowed; color: var(--ink-disabled); }
 }

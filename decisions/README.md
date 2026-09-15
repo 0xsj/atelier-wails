@@ -2,5 +2,5 @@
 
 Accepted architectural commitments with their rationale and tradeoffs.
 
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+- [2026-09-11 errors public projection](2026-09-11-errors-public-projection.md)
+- [2026-09-12 preferences file persistence](2026-09-12-preferences-file-persistence.md)

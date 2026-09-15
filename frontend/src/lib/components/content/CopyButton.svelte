@@ -27,4 +27,6 @@
 	}
 </script>
 
-<button {...rest} type="button" class="atelier-copy-button {className ?? ''}" aria-label={copied ? 'Copied' : label} onclick={copy}><span aria-hidden="true">{copied ? '✓' : '⧉'}</span>{copied ? 'Copied' : label}</button>
+<button {...rest} type="button" class="atelier-copy-button {className ?? ''}" aria-label={copied ? 'Copied' : label} onclick={copy}>
+	<span aria-hidden="true">{copied ? '✓' : '⧉'}</span>{copied ? 'Copied' : label}
+</button>

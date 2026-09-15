@@ -17,10 +17,24 @@
 			opacity var(--motion-fast) var(--ease-standard);
 	}
 
-	.atelier-button { padding-inline: var(--space-5); }
-	.atelier-button[data-size='sm'], .atelier-icon-button[data-size='sm'] { min-block-size: var(--control-sm); }
-	.atelier-button[data-size='md'], .atelier-icon-button[data-size='md'] { min-block-size: var(--control-md); }
-	.atelier-button[data-size='lg'], .atelier-icon-button[data-size='lg'] { min-block-size: var(--control-lg); }
+	.atelier-button {
+		padding-inline: var(--space-5);
+	}
+
+	.atelier-button[data-size='sm'],
+	.atelier-icon-button[data-size='sm'] {
+		min-block-size: var(--control-sm);
+	}
+
+	.atelier-button[data-size='md'],
+	.atelier-icon-button[data-size='md'] {
+		min-block-size: var(--control-md);
+	}
+
+	.atelier-button[data-size='lg'],
+	.atelier-icon-button[data-size='lg'] {
+		min-block-size: var(--control-lg);
+	}
 
 	.atelier-icon-button {
 		inline-size: var(--control-md);
@@ -33,18 +47,77 @@
 
 	.atelier-icon-button[data-size='sm'] { inline-size: var(--control-sm); }
 	.atelier-icon-button[data-size='lg'] { inline-size: var(--control-lg); }
-	.atelier-button[data-variant='primary'] { background: var(--accent-fill); color: var(--accent-ink); }
-	.atelier-button[data-variant='primary']:hover:not(:disabled) { background: var(--accent-fill-hover); }
-	.atelier-button[data-variant='secondary'] { border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--ink); }
-	.atelier-button[data-variant='secondary']:hover:not(:disabled) { background: var(--surface-hover-strong); }
-	.atelier-button[data-variant='quiet'], .atelier-icon-button[data-variant='quiet'] { background: transparent; color: var(--ink-muted); }
-	.atelier-button[data-variant='quiet']:hover:not(:disabled), .atelier-icon-button:hover:not(:disabled) { background: var(--surface-hover); color: var(--ink); }
-	.atelier-button[data-variant='danger'] { background: var(--danger-tint); color: var(--danger); }
-	.atelier-button[data-variant='danger']:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 20%, transparent); }
-	.atelier-icon-button[data-tone='accent'] { background: var(--accent-tint); color: var(--accent); }
-	.atelier-icon-button[data-tone='danger'] { background: var(--danger-tint); color: var(--danger); }
-	.atelier-button:disabled, .atelier-icon-button:disabled { cursor: not-allowed; opacity: 0.45; }
-	.atelier-button[data-loading] .atelier-button__content { opacity: 0.7; }
-	.atelier-button__spinner { inline-size: 12px; block-size: 12px; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: var(--radius-pill); animation: atelier-button-spin 700ms linear infinite; }
-	@keyframes atelier-button-spin { to { transform: rotate(360deg); } }
+
+	.atelier-button[data-variant='primary'] {
+		background: var(--accent-fill);
+		color: var(--accent-ink);
+	}
+
+	.atelier-button[data-variant='primary']:hover:not(:disabled) {
+		background: var(--accent-fill-hover);
+	}
+
+	.atelier-button[data-variant='secondary'] {
+		border: 1px solid var(--line-strong);
+		background: var(--surface-raised);
+		color: var(--ink);
+	}
+
+	.atelier-button[data-variant='secondary']:hover:not(:disabled) {
+		background: var(--surface-hover-strong);
+	}
+
+	.atelier-button[data-variant='quiet'],
+	.atelier-icon-button[data-variant='quiet'] {
+		background: transparent;
+		color: var(--ink-muted);
+	}
+
+	.atelier-button[data-variant='quiet']:hover:not(:disabled),
+	.atelier-icon-button:hover:not(:disabled) {
+		background: var(--surface-hover);
+		color: var(--ink);
+	}
+
+	.atelier-button[data-variant='danger'] {
+		background: var(--danger-tint);
+		color: var(--danger);
+	}
+
+	.atelier-button[data-variant='danger']:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--danger) 20%, transparent);
+	}
+
+	.atelier-icon-button[data-tone='accent'] {
+		background: var(--accent-tint);
+		color: var(--accent);
+	}
+
+	.atelier-icon-button[data-tone='danger'] {
+		background: var(--danger-tint);
+		color: var(--danger);
+	}
+
+	.atelier-button:disabled,
+	.atelier-icon-button:disabled {
+		cursor: not-allowed;
+		opacity: 0.45;
+	}
+
+	.atelier-button[data-loading] .atelier-button__content {
+		opacity: 0.7;
+	}
+
+	.atelier-button__spinner {
+		inline-size: 12px;
+		block-size: 12px;
+		border: 2px solid currentColor;
+		border-inline-end-color: transparent;
+		border-radius: var(--radius-pill);
+		animation: atelier-button-spin 700ms linear infinite;
+	}
+
+	@keyframes atelier-button-spin {
+		to { transform: rotate(360deg); }
+	}
 }

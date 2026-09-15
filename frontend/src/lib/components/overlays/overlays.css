@@ -2,9 +2,12 @@
 	.atelier-tooltip__trigger { display: inline-flex; align-items: center; justify-content: center; }
 	.atelier-tooltip__content { z-index: var(--z-popover); max-inline-size: 240px; padding: var(--space-3) var(--space-4); border: 1px solid var(--line-strong); border-radius: var(--radius-2); background: var(--surface-raised); box-shadow: var(--shadow-popover); color: var(--ink); font-size: var(--text-11); line-height: var(--leading-body); }
 	.atelier-tooltip__arrow { fill: var(--surface-raised); stroke: var(--line-strong); }
-	.atelier-popover__trigger, .atelier-dialog__trigger { display: inline-flex; align-items: center; justify-content: center; }
+
+	.atelier-popover__trigger,
+	.atelier-dialog__trigger { display: inline-flex; align-items: center; justify-content: center; }
 	.atelier-popover__content { z-index: var(--z-popover); min-inline-size: 220px; max-inline-size: min(360px, calc(100vw - var(--space-8))); padding: var(--space-5); border: 1px solid var(--line-strong); border-radius: var(--radius-3); background: var(--surface-raised); box-shadow: var(--shadow-popover); color: var(--ink); }
 	.atelier-popover__arrow { fill: var(--surface-raised); stroke: var(--line-strong); }
+
 	.atelier-dialog__overlay { position: fixed; z-index: var(--z-overlay); inset: 0; background: var(--scrim); }
 	.atelier-dialog__content { position: fixed; z-index: calc(var(--z-overlay) + 1); inset-block-start: 50%; inset-inline-start: 50%; display: grid; gap: var(--space-7); inline-size: min(520px, calc(100vw - var(--space-8))); max-block-size: calc(100dvh - var(--space-8)); overflow: auto; padding: var(--space-8); border: 1px solid var(--line-strong); border-radius: var(--radius-3); background: var(--surface-panel); box-shadow: var(--shadow-popover); color: var(--ink); transform: translate(-50%, -50%); }
 	.atelier-dialog__content[data-size='sm'] { inline-size: min(380px, calc(100vw - var(--space-8))); }

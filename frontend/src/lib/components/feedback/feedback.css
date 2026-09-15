@@ -1,8 +1,21 @@
 @layer primitive {
-	.atelier-badge, .atelier-status { display: inline-flex; align-items: center; }
-	.atelier-badge { justify-content: center; border-radius: var(--radius-pill); font-weight: var(--weight-medium); line-height: 1; white-space: nowrap; }
+	.atelier-badge,
+	.atelier-status {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.atelier-badge {
+		justify-content: center;
+		border-radius: var(--radius-pill);
+		font-weight: var(--weight-medium);
+		line-height: 1;
+		white-space: nowrap;
+	}
+
 	.atelier-badge[data-size='sm'] { min-block-size: var(--control-xs); padding-inline: var(--space-3); font-size: var(--text-10); }
 	.atelier-badge[data-size='md'] { min-block-size: var(--control-sm); padding-inline: var(--space-4); font-size: var(--text-11); }
+
 	.atelier-badge[data-tone='neutral'] { --badge-color: var(--ink-muted); --badge-tint: var(--surface-hover); }
 	.atelier-badge[data-tone='accent'] { --badge-color: var(--accent); --badge-tint: var(--accent-tint); }
 	.atelier-badge[data-tone='success'] { --badge-color: var(--success); --badge-tint: var(--success-tint); }
@@ -11,6 +24,7 @@
 	.atelier-badge[data-variant='soft'] { background: var(--badge-tint); color: var(--badge-color); }
 	.atelier-badge[data-variant='solid'] { background: var(--badge-color); color: var(--accent-ink); }
 	.atelier-badge[data-variant='outline'] { border: 1px solid color-mix(in srgb, var(--badge-color) 52%, transparent); color: var(--badge-color); }
+
 	.atelier-status { gap: var(--space-3); color: var(--ink-muted); }
 	.atelier-status[data-size='sm'] { font-size: var(--text-11); }
 	.atelier-status[data-size='md'] { font-size: var(--text-12); }
@@ -22,16 +36,19 @@
 	.atelier-status[data-tone='warning'] { --status-color: var(--warning); }
 	.atelier-status[data-tone='danger'] { --status-color: var(--danger); }
 	.atelier-status[data-pulse] .atelier-status__dot { animation: atelier-status-pulse 1.8s ease-in-out infinite; }
+
 	.atelier-spinner { display: inline-block; flex: 0 0 auto; border: 2px solid var(--accent-tint); border-block-start-color: var(--accent); border-radius: 50%; animation: atelier-spinner-rotate 700ms linear infinite; }
 	.atelier-spinner[data-size='sm'] { inline-size: 12px; block-size: 12px; }
 	.atelier-spinner[data-size='md'] { inline-size: 18px; block-size: 18px; }
 	.atelier-spinner[data-size='lg'] { inline-size: 26px; block-size: 26px; border-width: 3px; }
+
 	.atelier-progress { display: block; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-hover-strong); }
 	.atelier-progress[data-size='sm'] { block-size: 4px; }
 	.atelier-progress[data-size='md'] { block-size: 6px; }
 	.atelier-progress[data-size='lg'] { block-size: 8px; }
 	.atelier-progress__bar { block-size: 100%; display: block; border-radius: inherit; background: var(--accent-fill); transition: inline-size var(--motion-normal) var(--ease-standard); }
 	.atelier-progress[data-indeterminate] .atelier-progress__bar { inline-size: 42% !important; animation: atelier-progress-slide 1.3s ease-in-out infinite; }
+
 	.atelier-alert, .atelier-banner { --feedback-color: var(--ink-muted); --feedback-tint: var(--surface-hover); }
 	.atelier-alert[data-tone='accent'], .atelier-banner[data-tone='accent'] { --feedback-color: var(--accent); --feedback-tint: var(--accent-tint); }
 	.atelier-alert[data-tone='success'], .atelier-banner[data-tone='success'] { --feedback-color: var(--success); --feedback-tint: var(--success-tint); }
@@ -68,6 +85,7 @@
 	.atelier-toast__copy span { color: var(--ink-muted); font-size: var(--text-11); line-height: var(--leading-body); }
 	.atelier-toast__action { align-self: center; flex: 0 0 auto; border: 0; background: transparent; color: var(--accent); font-size: var(--text-11); font-weight: var(--weight-medium); }
 	@keyframes atelier-skeleton-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
 	@keyframes atelier-status-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-color) 0%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-color) 20%, transparent); } }
 	@keyframes atelier-spinner-rotate { to { transform: rotate(360deg); } }
 	@keyframes atelier-progress-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(250%); } }

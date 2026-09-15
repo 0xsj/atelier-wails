@@ -116,95 +116,174 @@
     },
     {
       "id": "preferences-domain",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [
         "preferences-contract",
-        "native-leaves-integrate"
+        "native-leaves-integrate",
+        "native-errors",
+        "native-id"
       ],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Specify preference values and pure transitions."
+      "contract": "internal/preferences/domain/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/preferences-domain.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/preferences/domain/",
+        "work/handoffs/preferences-domain.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/domain/CONTRACT.md",
+        "pkg/errors/",
+        "pkg/id/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/preferences/domain",
+        "go test -race -count=1 ./internal/preferences/...",
+        "go vet ./...",
+        "gofmt -l internal/preferences"
+      ]
     },
     {
       "id": "preferences-app",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [
-        "preferences-domain"
+        "preferences-domain",
+        "native-errors"
       ],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Specify consumer ports and operation error mappings."
+      "contract": "internal/preferences/app/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/preferences-app.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/preferences/app/",
+        "work/handoffs/preferences-app.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/app/CONTRACT.md",
+        "internal/preferences/domain/",
+        "pkg/errors/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/preferences/app/...",
+        "go test -race -count=1 ./internal/preferences/...",
+        "go vet ./...",
+        "gofmt -l internal/preferences"
+      ]
     },
     {
       "id": "preferences-memory",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [
-        "preferences-app"
+        "preferences-app",
+        "preferences-domain"
       ],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Specify and implement real memory port behavior plus shared adapter scenarios."
+      "contract": "internal/preferences/infra/memory/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/preferences-memory.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/preferences/infra/memory/",
+        "internal/preferences/infra/storetest/",
+        "work/handoffs/preferences-memory.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/infra/memory/CONTRACT.md",
+        "internal/preferences/domain/",
+        "internal/preferences/app/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/preferences/infra/...",
+        "go test -race -count=1 ./internal/preferences/...",
+        "go vet ./...",
+        "gofmt -l internal/preferences"
+      ]
     },
     {
       "id": "desktop-wire-contract",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [
-        "preferences-app"
+        "preferences-app",
+        "preferences-memory",
+        "native-errors"
       ],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Specify public DTO/error validation and commit uncertainty; coordinate frontend kernel."
+      "contract": "internal/preferences/transport/desktop/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/desktop-wire-contract.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/preferences/transport/desktop/",
+        "work/handoffs/desktop-wire-contract.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/transport/desktop/CONTRACT.md",
+        "internal/preferences/domain/",
+        "internal/preferences/app/",
+        "pkg/errors/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/preferences/transport/...",
+        "go test -race -count=1 ./internal/preferences/...",
+        "go vet ./...",
+        "gofmt -l internal/preferences"
+      ]
     },
     {
       "id": "preferences-native-slice",
-      "state": "planned",
+      "state": "implemented",
       "depends_on": [
         "preferences-memory",
         "desktop-wire-contract"
       ],
       "contract": null,
       "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Wire and verify the real Svelte/native/memory round trip."
+      "task": "work/tasks/preferences-native-slice.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/host/wails/",
+        "root/",
+        "internal/preferences/transport/desktop/",
+        "work/handoffs/preferences-native-slice.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/transport/desktop/CONTRACT.md",
+        "internal/preferences/infra/memory/CONTRACT.md",
+        "internal/preferences/app/"
+      ],
+      "checks": [
+        "go test -race -count=1 ./...",
+        "go vet ./...",
+        "gofmt -l internal root",
+        "go build -o /tmp/atelier-wails-native-slice-check ."
+      ],
+      "reason": "Backend half implemented; the frontend adapter, codecs and visible native round trip are owned by the frontend session and must be reviewed before complete."
     },
     {
       "id": "preferences-persistence",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [
-        "preferences-native-slice"
+        "preferences-memory",
+        "native-fileio"
       ],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Select storage explicitly, then adapter/restart/corruption checks."
+      "contract": "internal/preferences/infra/persistence/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/preferences-persistence.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/preferences/infra/persistence/",
+        "root/",
+        "work/handoffs/preferences-persistence.md"
+      ],
+      "read_only_paths": [
+        "internal/preferences/infra/persistence/CONTRACT.md",
+        "internal/preferences/infra/memory/CONTRACT.md",
+        "pkg/fileio/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/preferences/infra/...",
+        "go test -race -count=1 ./internal/preferences/... ./root",
+        "go vet ./...",
+        "gofmt -l internal root pkg"
+      ]
     },
     {
       "id": "native-id",
@@ -283,29 +362,49 @@
     },
     {
       "id": "native-fileio",
-      "state": "planned",
-      "depends_on": [],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Specify the first filesystem operation and required atomicity/durability."
+      "state": "complete",
+      "depends_on": [
+        "native-errors"
+      ],
+      "contract": "pkg/fileio/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/native-fileio.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "pkg/fileio/",
+        "work/handoffs/native-fileio.md"
+      ],
+      "read_only_paths": [
+        "pkg/fileio/CONTRACT.md",
+        "pkg/errors/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./pkg/fileio",
+        "go test -race -count=1 ./pkg/fileio",
+        "go vet ./...",
+        "gofmt -l pkg/fileio"
+      ]
     },
     {
       "id": "architecture-checks",
-      "state": "planned",
+      "state": "complete",
       "depends_on": [],
-      "contract": null,
-      "contract_revision": null,
-      "task": null,
-      "owner": null,
-      "allowed_paths": [],
-      "read_only_paths": [],
-      "checks": [],
-      "reason": "Implement and test forbidden-import rules; metadata verification is not import enforcement."
+      "contract": "tools/architecture/RULES.md",
+      "contract_revision": 1,
+      "task": "work/tasks/architecture-checks.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "tools/architecture/",
+        "work/handoffs/architecture-checks.md"
+      ],
+      "read_only_paths": [
+        "tools/architecture/RULES.md",
+        "DOMAIN_GUIDE.md"
+      ],
+      "checks": [
+        "python3 tools/architecture/check_imports.py",
+        "python3 -m unittest discover -s tools/architecture -p 'test_*.py'"
+      ]
     },
     {
       "id": "native-provenance",
@@ -392,6 +491,187 @@
       "read_only_paths": [],
       "checks": [
         "python3 tools/work/verify_manifest.py"
+      ]
+    },
+    {
+      "id": "workspace-domain",
+      "state": "complete",
+      "depends_on": [
+        "workspace-contract",
+        "native-leaves-integrate",
+        "native-errors",
+        "native-id"
+      ],
+      "contract": "internal/workspace/domain/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/workspace-domain.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/workspace/domain/",
+        "work/handoffs/workspace-domain.md"
+      ],
+      "read_only_paths": [
+        "internal/workspace/domain/CONTRACT.md",
+        "pkg/errors/",
+        "pkg/id/"
+      ],
+      "checks": [
+        "go test -count=1 -v ./internal/workspace/domain",
+        "go test -race -count=1 ./internal/workspace/...",
+        "go vet ./...",
+        "gofmt -l internal/workspace"
+      ]
+    },
+    {
+      "id": "workspace-app",
+      "state": "complete",
+      "depends_on": [
+        "workspace-domain",
+        "native-errors",
+        "native-id"
+      ],
+      "contract": "internal/workspace/app/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/workspace-app.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/workspace/app/",
+        "work/handoffs/workspace-app.md"
+      ],
+      "read_only_paths": [
+        "internal/workspace/domain/",
+        "pkg/errors/",
+        "pkg/id/"
+      ],
+      "checks": [
+        "go test -count=1 ./internal/workspace/app/...",
+        "go test -race -count=1 ./internal/workspace/...",
+        "go vet ./...",
+        "gofmt -l internal/workspace"
+      ]
+    },
+    {
+      "id": "workspace-memory",
+      "state": "complete",
+      "depends_on": [
+        "workspace-app",
+        "workspace-domain"
+      ],
+      "contract": "internal/workspace/infra/memory/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/workspace-memory.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/workspace/infra/",
+        "work/handoffs/workspace-memory.md"
+      ],
+      "read_only_paths": [
+        "internal/workspace/infra/memory/CONTRACT.md",
+        "internal/workspace/domain/",
+        "internal/workspace/app/"
+      ],
+      "checks": [
+        "go test -count=1 ./internal/workspace/infra/memory/...",
+        "go test -race -count=1 ./internal/workspace/...",
+        "go vet ./...",
+        "gofmt -l internal/workspace"
+      ]
+    },
+    {
+      "id": "workspace-native-transport",
+      "state": "complete",
+      "depends_on": [
+        "workspace-memory"
+      ],
+      "contract": "internal/workspace/transport/desktop/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/workspace-native-transport.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/workspace/transport/",
+        "internal/host/wails/",
+        "root/",
+        "frontend/src/lib/platform/desktop/",
+        "frontend/src/lib/root/App.svelte",
+        "work/handoffs/workspace-native-transport.md"
+      ],
+      "read_only_paths": [
+        "internal/workspace/domain/",
+        "internal/workspace/app/",
+        "internal/workspace/infra/memory/",
+        "frontend/src/lib/services/workspace/",
+        "frontend/src/lib/platform/codecs/workspace.ts"
+      ],
+      "checks": [
+        "gofmt -l internal/workspace internal/host/wails root",
+        "go test -count=1 ./internal/workspace/transport/desktop",
+        "go test -race -count=1 ./...",
+        "go vet ./...",
+        "npm run check",
+        "npm test",
+        "python3 tools/work/verify_manifest.py",
+        "python3 tools/architecture/check_imports.py"
+      ]
+    },
+    {
+      "id": "workspace-persistence",
+      "state": "complete",
+      "depends_on": [
+        "workspace-native-transport"
+      ],
+      "contract": "internal/workspace/infra/persistence/CONTRACT.md",
+      "contract_revision": 1,
+      "task": "work/tasks/workspace-persistence.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "internal/workspace/infra/",
+        "root/",
+        "work/handoffs/workspace-persistence.md"
+      ],
+      "read_only_paths": [
+        "internal/workspace/domain/",
+        "internal/workspace/app/",
+        "pkg/fileio/",
+        "internal/host/wails/workspace.go"
+      ],
+      "checks": [
+        "gofmt -l internal/workspace internal/host/wails root",
+        "go test -count=1 ./internal/workspace/infra/persistence ./internal/workspace/infra/storetest ./root",
+        "go test -race -count=1 ./...",
+        "go vet ./...",
+        "python3 tools/work/verify_manifest.py",
+        "python3 tools/architecture/check_imports.py"
+      ]
+    },
+    {
+      "id": "workspace-runtime-open",
+      "state": "complete",
+      "depends_on": [
+        "workspace-persistence"
+      ],
+      "contract": null,
+      "contract_revision": null,
+      "task": "work/tasks/workspace-runtime-open.md",
+      "owner": "coordinator",
+      "allowed_paths": [
+        "frontend/src/lib/services/workspace/",
+        "frontend/src/lib/features/workspace/",
+        "frontend/src/lib/root/App.svelte",
+        "frontend/src/dev/gallery/",
+        "work/handoffs/workspace-runtime-open.md"
+      ],
+      "read_only_paths": [
+        "frontend/src/lib/platform/codecs/workspace.ts",
+        "frontend/src/lib/platform/desktop/workspace.ts",
+        "frontend/src/lib/platform/preview/workspace.ts"
+      ],
+      "checks": [
+        "npm --prefix frontend run check",
+        "npm --prefix frontend test",
+        "go test -race -count=1 ./...",
+        "go vet ./...",
+        "python3 tools/work/verify_manifest.py",
+        "python3 tools/architecture/check_imports.py"
       ]
     }
   ]

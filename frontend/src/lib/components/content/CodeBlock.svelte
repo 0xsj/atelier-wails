@@ -14,4 +14,10 @@
 	let { code, language, copyable = true, onCopy, class: className, ...rest }: Props = $props();
 </script>
 
-<figure {...rest} class="atelier-code-block {className ?? ''}"><header class="atelier-code-block__header">{#if language}<span>{language}</span>{:else}<span>Code</span>{/if}{#if copyable}<CopyButton value={code} onCopy={onCopy} />{/if}</header><pre><code>{code}</code></pre></figure>
+<figure {...rest} class="atelier-code-block {className ?? ''}">
+	<header class="atelier-code-block__header">
+		{#if language}<span>{language}</span>{:else}<span>Code</span>{/if}
+		{#if copyable}<CopyButton value={code} onCopy={onCopy} />{/if}
+	</header>
+	<pre><code>{code}</code></pre>
+</figure>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ButtonProps } from './button';
-	import './button.css';
+import './button.css';
 
 	let {
 		variant = 'secondary',

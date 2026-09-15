@@ -22,4 +22,7 @@
 	}
 </script>
 
-<span {...rest} class="atelier-avatar {className ?? ''}" data-size={size} data-status={status} role="img" aria-label={accessibleLabel}>{#if src}<img src={src} alt="" />{:else}<span aria-hidden="true">{initials}</span>{/if}{#if status}<span class="atelier-avatar__status" aria-hidden="true"></span>{/if}</span>
+<span {...rest} class="atelier-avatar {className ?? ''}" data-size={size} data-status={status} role="img" aria-label={accessibleLabel}>
+	{#if src}<img src={src} alt="" />{:else}<span aria-hidden="true">{initials}</span>{/if}
+	{#if status}<span class="atelier-avatar__status" aria-hidden="true"></span>{/if}
+</span>

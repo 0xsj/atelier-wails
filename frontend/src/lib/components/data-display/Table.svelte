@@ -23,4 +23,20 @@
 	}
 </script>
 
-<div {...rest} class="atelier-table-wrap {className ?? ''}"><table class="atelier-table" data-compact={compact} aria-label={ariaLabel}>{#if caption}<caption>{caption}</caption>{/if}<thead><tr>{#each columns as column}<th scope="col" data-align={column.align ?? 'start'} style={column.width ? `inline-size: ${column.width}` : undefined}>{column.label}</th>{/each}</tr></thead><tbody>{#if rows.length}{#each rows as row, rowIndex (row.id ?? rowIndex)}<tr>{#each columns as column}<td data-align={column.align ?? 'start'}>{cellText(row[column.key])}</td>{/each}</tr>{/each}{:else}<tr><td class="atelier-table__empty" colspan={columns.length}>{emptyLabel}</td></tr>{/if}</tbody></table></div>
+<div {...rest} class="atelier-table-wrap {className ?? ''}">
+	<table class="atelier-table" data-compact={compact} aria-label={ariaLabel}>
+		{#if caption}<caption>{caption}</caption>{/if}
+		<thead>
+			<tr>{#each columns as column}<th scope="col" data-align={column.align ?? 'start'} style={column.width ? `inline-size: ${column.width}` : undefined}>{column.label}</th>{/each}</tr>
+		</thead>
+		<tbody>
+			{#if rows.length}
+				{#each rows as row, rowIndex (row.id ?? rowIndex)}
+					<tr>{#each columns as column}<td data-align={column.align ?? 'start'}>{cellText(row[column.key])}</td>{/each}</tr>
+				{/each}
+			{:else}
+				<tr><td class="atelier-table__empty" colspan={columns.length}>{emptyLabel}</td></tr>
+			{/if}
+		</tbody>
+	</table>
+</div>

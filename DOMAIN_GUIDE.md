@@ -107,8 +107,8 @@ singletons and adapters constructed inside commands. A contract test package can
 construct both memory and persistent adapters without making either import the
 other. Keep test scaffolding out of production dependency paths.
 
-Go's `internal/` restriction does not prohibit imports between sibling contexts.
-Review that rule explicitly until an architecture checker exists.
+Go's `internal/` restriction does not prohibit imports between sibling contexts;
+`tools/architecture/check_imports.py` refuses them.
 
 
 ## Memory adapter contract
@@ -211,8 +211,9 @@ restart and real adapter evidence and an explicit default selected in root.
 
 Keep tests focused on observable contracts, including negative cases that could
 otherwise look like success. Keep pure tests close to owners and real adapter
-checks close to adapters. Architecture review checks forbidden imports; folder
-layout alone enforces neither purity nor bounded contexts.
+checks close to adapters. `tools/architecture/check_imports.py` refuses forbidden imports; folder
+layout alone enforces neither purity nor bounded contexts, and the checker
+does not verify behavior.
 
 This guide was added as documentation only. No adapters or domain behavior were
 implemented or runtime-tested as part of writing it.

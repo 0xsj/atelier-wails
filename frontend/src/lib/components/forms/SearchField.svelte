@@ -2,7 +2,14 @@
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import './forms.css';
 
-	interface Props extends Omit<HTMLInputAttributes, 'class' | 'value' | 'type'> { value?: string; placeholder?: string; size?: 'sm' | 'md' | 'lg'; ariaLabel?: string; class?: string; }
+	interface Props extends Omit<HTMLInputAttributes, 'class' | 'value' | 'type' | 'size'> {
+		value?: string;
+		placeholder?: string;
+		size?: 'sm' | 'md' | 'lg';
+		ariaLabel?: string;
+		class?: string;
+	}
+
 	let { value = $bindable(''), placeholder = 'Search', size = 'md', ariaLabel = 'Search', class: className, ...rest }: Props = $props();
 </script>
 

@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { ContextMenu as Primitive } from 'bits-ui';
 	import './navigation.css';
+
 	interface Props { trigger: Snippet; children: Snippet; open?: boolean; class?: string; }
 	let { trigger, children, open = $bindable(false), class: className }: Props = $props();
 </script>

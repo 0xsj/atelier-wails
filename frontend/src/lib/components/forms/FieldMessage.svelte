@@ -4,7 +4,9 @@
 	import './forms.css';
 
 	type FieldMessageTone = 'hint' | 'error' | 'success';
+
 	interface Props extends Omit<HTMLAttributes<HTMLParagraphElement>, 'children' | 'class' | 'role'> { tone?: FieldMessageTone; children?: Snippet; class?: string; }
+
 	let { tone = 'hint', children, class: className, ...rest }: Props = $props();
 </script>
 

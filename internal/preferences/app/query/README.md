@@ -1,6 +1,7 @@
 # query
 
-Preferences candidate context. Reads and projections; narrow consumer-owned ports.
+Preferences bounded context. Reads (read, list, resolve against a fallback)
+and the read port they consume. Resolve never writes.
 
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Implemented against [../CONTRACT.md](../CONTRACT.md) revision 1 (task
+preferences-app). Scenario tests live in spec_test.go.

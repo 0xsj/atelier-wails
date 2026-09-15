@@ -1,6 +1,6 @@
 # Foundation build order
 
-Current backend status: errors, clocks, secrets, config, IDs, provenance and logger are implemented. The first
+Current backend status: errors, clocks, secrets, config, IDs, provenance, logger and file IO are implemented, and the layer import rules are enforced by tools/architecture. The first
 combined gate is complete. [Integration evidence](work/handoffs/native-leaves-integrate.md).
 Console logging is wired in native root; Preferences, Workspace and Jobs
 contracts are now specified.
@@ -34,12 +34,19 @@ serialized or displayed to users.
 
 Native leaves mirror the same ordering: errors/identity/time values before the
 application that consumes them; config/logger/file IO only at effectful boundaries.
-Preferences, Workspace and Jobs are candidate bounded contexts. Each has
-reserved domain/app/infra/transport ownership, not an implemented public API.
+Preferences, Workspace and Jobs are candidate bounded contexts. Preferences
+has a composed native slice; Workspace now has a composed native transport and
+persistent root slice; Jobs remains contract-only. Workspace runtime-open
+ownership remains a separate future slice.
 
-Current working code: Svelte mount, Hello world component, minimal semantic tokens
-and styles, native entry → composition root → host launch. Everything else marked
-reserved is a navigation/ownership scaffold.
+Current working code: the Svelte component gallery and workbench UI run through
+portable models and app services; root selects preview or native Preferences and
+workbench restoration adapters. Native startup composes the file-backed
+Preferences store and atomic `workbench.json` snapshot facade. Workspace
+startup composes its Wails facade over one isolated memory registry, and the
+frontend selects the matching native adapter in desktop mode, and Workspace
+metadata persists through a versioned `workspace.json` document. Jobs remains
+reserved until a concrete operation needs it.
 
 See [DOMAIN_GUIDE.md](DOMAIN_GUIDE.md) for backend domain build order,
 consumer-owned ports, memory adapters, fixtures and progression to persistence.
@@ -70,8 +77,33 @@ transport propagation and durable history remain separate future slices.
 Console logging is implemented with swappable sinks, safe error/provenance
 projection and memory capture. Native root owns the stderr default, a generated
 bootstrap provenance scope and lifecycle records. [Logger evidence](work/handoffs/native-logger.md).
-[Bootstrap evidence](work/handoffs/native-root-bootstrap.md). The next proposed
-application slice is Preferences, starting with its pure domain implementation.
+[Bootstrap evidence](work/handoffs/native-root-bootstrap.md). The Preferences pure
+domain is implemented against its module contract; see
+[domain evidence](work/handoffs/preferences-domain.md). Its application
+services are implemented with consumer-owned ports and an in-process event
+seam; see [application evidence](work/handoffs/preferences-app.md). The
+memory adapter passes the reusable store scenario suite; see
+[memory evidence](work/handoffs/preferences-memory.md). The desktop wire
+contract is specified and its framework-free handler implemented; see
+[wire evidence](work/handoffs/desktop-wire-contract.md). Root now composes the
+slice over the memory adapter and binds the native facade; see
+[native slice evidence](work/handoffs/preferences-native-slice.md). Preferences persist
+as one atomically replaced document selected explicitly by root; see
+[persistence evidence](work/handoffs/preferences-persistence.md) and the
+[storage decision](decisions/2026-09-12-preferences-file-persistence.md). The
+frontend half of the round trip is still open. The Workspace pure domain is
+implemented against its module contract; see
+[workspace evidence](work/handoffs/workspace-domain.md). Its application
+boundary and memory adapter now pass the shared WA01–WA10 and WM01–WM10
+scenarios; see [application evidence](work/handoffs/workspace-app.md) and
+[memory evidence](work/handoffs/workspace-memory.md). Its native transport,
+Wails facade/root composition and desktop adapter are now implemented; see
+[transport evidence](work/handoffs/workspace-native-transport.md). Workspace
+state now survives restart through the versioned persistence adapter; see
+[persistence evidence](work/handoffs/workspace-persistence.md). Runtime-open
+now re-reads the authoritative record and activates Workbench context through
+[its workflow handoff](work/handoffs/workspace-runtime-open.md). Workspace-
+scoped restoration remains separate.
 
 The three revision 1 domain boundaries are collected in
 [DOMAIN_CONTRACTS.md](DOMAIN_CONTRACTS.md), with mirrored contracts in the Tauri

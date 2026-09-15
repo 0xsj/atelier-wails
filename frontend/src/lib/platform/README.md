@@ -1,6 +1,8 @@
 # platform
 
-Native and preview adapters. Only desktop adapters may import native bindings. Implement consumer-owned ports; map and validate plain wire data.
-
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Native and preview adapters. Only `desktop/` may import native bindings; it
+implements the consumer-owned Preferences and workbench restoration ports for
+this host. `preview/` provides the browser doubles that honor the Preferences
+and Workspace wire contracts plus workbench restoration.
+`codecs/` holds the total readers and writers for the wire shapes. Root
+selects between desktop and preview; nothing else constructs adapters.

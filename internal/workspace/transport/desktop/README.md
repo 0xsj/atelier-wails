@@ -1,6 +1,5 @@
-# desktop
+# Workspace desktop transport
 
-Workspace candidate context. Plain request/response mapping. Native framework types stay in host.
-
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Plain JSON request/response shapes and a framework-free handler for the
+Workspace registry. The Wails facade forwards one request document per bound
+method; the frontend codec validates the returned envelope.

@@ -1,6 +1,8 @@
 # restoration
 
-Validate and restore versioned layout snapshots through an injected persistence port.
-
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Restore a workbench snapshot through an injected `SnapshotPort` and save it
+back, debounced. Loading returns an outcome value: restored, empty, invalid,
+unsupported or unavailable with the port's error; the model's total reader does
+the validation. `createMemorySnapshotPort` backs previews and tests; a native
+or file-backed port is a platform adapter chosen by the root. The native JSON
+document adapter leaves malformed text for the model's invalid outcome.

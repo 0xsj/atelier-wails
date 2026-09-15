@@ -1,6 +1,8 @@
 # command
 
-Preferences candidate context. Mutations and required effects; narrow consumer-owned ports.
+Preferences bounded context. Mutations (replace, remove) and the ports they
+consume: a conditional store and an in-process event publisher.
 
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Implemented against [../CONTRACT.md](../CONTRACT.md) revision 1 (task
+preferences-app). Scenario tests live in spec_test.go and run over the memory
+adapter draft with a recording publisher and a fault store.

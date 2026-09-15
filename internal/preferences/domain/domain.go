@@ -1,4 +1,11 @@
-// Package domain contains pure preference values and compare-and-replace rules.
+// Package domain contains the pure Preferences vocabulary and its
+// compare-and-replace decisions. It performs no storage, clock, ID generation,
+// logging or host call: a caller supplies the current entry for one scope and
+// key, and the domain returns decided values and returned event facts.
+//
+// Zero values of Scope, Key, Value and Entry are constructible in Go and are
+// invalid; every decision validates its inputs before inspecting state. See
+// CONTRACT.md for the promised scenarios.
 package domain
 
 import (
@@ -9,6 +16,20 @@ import (
 	"github.com/0xsj/atelier-wails/pkg/id"
 )
 
+// Event names returned by successful transitions.
+const (
+	ChangedEvent = "preference.changed"
+	RemovedEvent = "preference.removed"
+)
+
+const (
+	maxKeyLength   = 128
+	maxTextBytes   = 4096
+	maxRevision    = math.MaxUint64
+	invalidDisplay = "invalid"
+)
+
+// ScopeKind distinguishes the global installation scope from a workspace scope.
 type ScopeKind uint8
 
 const (
@@ -16,6 +37,7 @@ const (
 	WorkspaceScope
 )
 
+// Scope is either global or one opaque workspace ID. The zero Scope is invalid.
 type Scope struct {
 	kind      ScopeKind
 	workspace id.ID
@@ -23,6 +45,7 @@ type Scope struct {
 
 func Global() Scope { return Scope{kind: GlobalScope} }
 
+// ForWorkspace refuses the zero ID; it does not check that the workspace exists.
 func ForWorkspace(workspace id.ID) (Scope, error) {
 	if workspace.IsZero() {
 		return Scope{}, invalid("preferences.invalid_scope")
@@ -31,42 +54,69 @@ func ForWorkspace(workspace id.ID) (Scope, error) {
 }
 
 func (s Scope) Kind() ScopeKind { return s.kind }
+
+// WorkspaceID returns the workspace ID only for a valid workspace scope.
 func (s Scope) WorkspaceID() (id.ID, bool) {
-	return s.workspace, s.kind == WorkspaceScope && !s.workspace.IsZero()
+	if s.kind != WorkspaceScope || s.workspace.IsZero() {
+		return id.ID{}, false
+	}
+	return s.workspace, true
 }
+
 func (s Scope) Valid() bool {
-	return s.kind == GlobalScope || (s.kind == WorkspaceScope && !s.workspace.IsZero())
+	switch s.kind {
+	case GlobalScope:
+		return s.workspace.IsZero()
+	case WorkspaceScope:
+		return !s.workspace.IsZero()
+	default:
+		return false
+	}
 }
+
 func (s Scope) String() string {
+	if !s.Valid() {
+		return invalidDisplay
+	}
 	if s.kind == GlobalScope {
 		return "global"
 	}
-	if s.kind == WorkspaceScope && !s.workspace.IsZero() {
-		return "workspace:" + s.workspace.String()
-	}
-	return "invalid"
+	return "workspace:" + s.workspace.String()
 }
 
-type Key string
+// Key is validated lowercase ASCII matching [a-z][a-z0-9_.-]{0,127}. Its field
+// is private so a conversion cannot bypass NewKey; the zero Key is invalid.
+type Key struct{ value string }
 
 func NewKey(value string) (Key, error) {
-	if len(value) == 0 || len(value) > 128 || value[0] < 'a' || value[0] > 'z' {
-		return "", invalid("preferences.invalid_key")
+	if !validKey(value) {
+		return Key{}, invalid("preferences.invalid_key")
+	}
+	return Key{value: value}, nil
+}
+
+func (k Key) String() string { return k.value }
+func (k Key) Valid() bool    { return validKey(k.value) }
+
+func validKey(value string) bool {
+	if len(value) == 0 || len(value) > maxKeyLength {
+		return false
+	}
+	if value[0] < 'a' || value[0] > 'z' {
+		return false
 	}
 	for i := 1; i < len(value); i++ {
 		b := value[i]
-		if !((b >= 'a' && b <= 'z') || (b >= '0' && b <= '9') || b == '.' || b == '_' || b == '-') {
-			return "", invalid("preferences.invalid_key")
+		lower := b >= 'a' && b <= 'z'
+		digit := b >= '0' && b <= '9'
+		if !lower && !digit && b != '.' && b != '_' && b != '-' {
+			return false
 		}
 	}
-	return Key(value), nil
-}
-func (k Key) String() string { return string(k) }
-func (k Key) Valid() bool {
-	_, err := NewKey(string(k))
-	return err == nil
+	return true
 }
 
+// ValueKind is the type of a preference value; it is fixed by the value supplied.
 type ValueKind uint8
 
 const (
@@ -75,6 +125,8 @@ const (
 	IntValue
 )
 
+// Value is UTF-8 text of at most 4096 bytes, a boolean or a signed 64-bit
+// integer. The zero Value is invalid.
 type Value struct {
 	kind ValueKind
 	text string
@@ -83,67 +135,159 @@ type Value struct {
 }
 
 func Text(value string) (Value, error) {
-	if !utf8.ValidString(value) || len(value) > 4096 {
+	if !validText(value) {
 		return Value{}, invalid("preferences.invalid_value")
 	}
 	return Value{kind: TextValue, text: value}, nil
 }
-func Bool(value bool) Value          { return Value{kind: BoolValue, flag: value} }
-func Int(value int64) Value          { return Value{kind: IntValue, intv: value} }
-func (v Value) Kind() ValueKind      { return v.kind }
-func (v Value) Text() (string, bool) { return v.text, v.kind == TextValue }
-func (v Value) Bool() (bool, bool)   { return v.flag, v.kind == BoolValue }
-func (v Value) Int() (int64, bool)   { return v.intv, v.kind == IntValue }
+
+func Bool(value bool) Value { return Value{kind: BoolValue, flag: value} }
+func Int(value int64) Value { return Value{kind: IntValue, intv: value} }
+
+func (v Value) Kind() ValueKind { return v.kind }
+
+// Text returns the payload only for a text value.
+func (v Value) Text() (string, bool) {
+	if v.kind != TextValue {
+		return "", false
+	}
+	return v.text, true
+}
+
+// Bool returns the payload only for a boolean value.
+func (v Value) Bool() (bool, bool) {
+	if v.kind != BoolValue {
+		return false, false
+	}
+	return v.flag, true
+}
+
+// Int returns the payload only for an integer value.
+func (v Value) Int() (int64, bool) {
+	if v.kind != IntValue {
+		return 0, false
+	}
+	return v.intv, true
+}
+
 func (v Value) Valid() bool {
 	switch v.kind {
 	case TextValue:
-		return utf8.ValidString(v.text) && len(v.text) <= 4096
+		return validText(v.text)
 	case BoolValue, IntValue:
 		return true
 	default:
 		return false
 	}
 }
+
+// Equal compares kind and payload; values of different kinds are never equal.
 func (v Value) Equal(other Value) bool {
-	return v.kind == other.kind && v.text == other.text && v.flag == other.flag && v.intv == other.intv
+	if v.kind != other.kind {
+		return false
+	}
+	switch v.kind {
+	case TextValue:
+		return v.text == other.text
+	case BoolValue:
+		return v.flag == other.flag
+	case IntValue:
+		return v.intv == other.intv
+	default:
+		return false
+	}
 }
 
+func validText(value string) bool {
+	return len(value) <= maxTextBytes && utf8.ValidString(value)
+}
+
+// Expected is absent-for-create or an exact existing revision. The zero
+// Expected means absent.
 type Expected struct {
 	exists   bool
 	revision uint64
 }
 
 func ExpectAbsent() Expected { return Expected{} }
+
 func ExpectRevision(revision uint64) (Expected, error) {
 	if revision == 0 {
 		return Expected{}, invalid("preferences.invalid_revision")
 	}
 	return Expected{exists: true, revision: revision}, nil
 }
-func (e Expected) IsAbsent() bool           { return !e.exists }
-func (e Expected) Revision() (uint64, bool) { return e.revision, e.exists }
-func (e Expected) Valid() bool              { return !e.exists || e.revision != 0 }
 
-type Entry struct {
-	Scope    Scope
-	Key      Key
-	Value    Value
-	Revision uint64
+func (e Expected) IsAbsent() bool { return !e.exists }
+
+// Revision returns the expected revision only when an existing entry is expected.
+func (e Expected) Revision() (uint64, bool) {
+	if !e.exists {
+		return 0, false
+	}
+	return e.revision, true
 }
+
+func (e Expected) Valid() bool { return !e.exists || e.revision != 0 }
+
+func (e Expected) matches(revision uint64) bool {
+	return e.exists && e.revision == revision
+}
+
+// Entry is a stored preference: scope, key, value and a positive revision.
+// Fields are private; adapters rebuild entries through Restore.
+type Entry struct {
+	scope    Scope
+	key      Key
+	value    Value
+	revision uint64
+}
+
+// Restore performs validated construction for adapters decoding stored records.
+func Restore(scope Scope, key Key, value Value, revision uint64) (Entry, error) {
+	if err := validateInput(scope, key, value); err != nil {
+		return Entry{}, err
+	}
+	if revision == 0 {
+		return Entry{}, invalid("preferences.invalid_revision")
+	}
+	return Entry{scope: scope, key: key, value: value, revision: revision}, nil
+}
+
+func (e Entry) Scope() Scope     { return e.scope }
+func (e Entry) Key() Key         { return e.key }
+func (e Entry) Value() Value     { return e.value }
+func (e Entry) Revision() uint64 { return e.revision }
 
 func (e Entry) Valid() bool {
-	return e.Scope.Valid() && e.Key.Valid() && e.Value.Valid() && e.Revision != 0
+	return e.scope.Valid() && e.key.Valid() && e.value.Valid() && e.revision != 0
 }
 
+// Event is a returned fact describing a committed-to-be transition. The
+// application publishes it after its store transaction commits.
 type Event struct {
-	Name     string
-	Scope    Scope
-	Key      Key
-	Value    Value
-	HasValue bool
-	Revision uint64
+	name     string
+	scope    Scope
+	key      Key
+	value    Value
+	hasValue bool
+	revision uint64
 }
 
+func (e Event) Name() string     { return e.name }
+func (e Event) Scope() Scope     { return e.scope }
+func (e Event) Key() Key         { return e.key }
+func (e Event) Revision() uint64 { return e.revision }
+
+// Value returns the new value only for a changed event.
+func (e Event) Value() (Value, bool) {
+	if !e.hasValue {
+		return Value{}, false
+	}
+	return e.value, true
+}
+
+// ChangeStatus reports whether a replace decision changed the entry.
 type ChangeStatus uint8
 
 const (
@@ -151,55 +295,57 @@ const (
 	Unchanged
 )
 
+// ReplaceResult is Changed with an event, or Unchanged with the current entry
+// and a nil Event.
 type ReplaceResult struct {
 	Status ChangeStatus
 	Entry  Entry
 	Event  *Event
 }
 
+// RemoveResult is Removed with the removal revision and event, or the absent
+// no-op with Removed false and a nil Event.
 type RemoveResult struct {
 	Removed  bool
 	Revision uint64
 	Event    *Event
 }
 
+// DecideReplace validates inputs, then compares expected against current and
+// returns the entry and event a store should commit. It never mutates current.
 func DecideReplace(current *Entry, scope Scope, key Key, value Value, expected Expected) (ReplaceResult, error) {
-	if !scope.Valid() {
-		return ReplaceResult{}, invalid("preferences.invalid_scope")
-	}
-	if !key.Valid() {
-		return ReplaceResult{}, invalid("preferences.invalid_key")
-	}
-	if !value.Valid() {
-		return ReplaceResult{}, invalid("preferences.invalid_value")
+	if err := validateInput(scope, key, value); err != nil {
+		return ReplaceResult{}, err
 	}
 	if !expected.Valid() {
 		return ReplaceResult{}, invalid("preferences.invalid_revision")
 	}
 	if current == nil {
-		if expected.exists {
+		if !expected.IsAbsent() {
 			return ReplaceResult{}, conflict()
 		}
-		entry := Entry{Scope: scope, Key: key, Value: value, Revision: 1}
-		return ReplaceResult{Status: Changed, Entry: entry, Event: &Event{Name: "preference.changed", Scope: scope, Key: key, Value: value, HasValue: true, Revision: 1}}, nil
+		entry := Entry{scope: scope, key: key, value: value, revision: 1}
+		return ReplaceResult{Status: Changed, Entry: entry, Event: changedEvent(entry)}, nil
 	}
-	if !current.Valid() || current.Scope != scope || current.Key != key {
-		return ReplaceResult{}, invalid("preferences.invalid_entry")
+	if err := validateCurrent(*current, scope, key); err != nil {
+		return ReplaceResult{}, err
 	}
-	if !expected.exists || expected.revision != current.Revision {
+	if !expected.matches(current.revision) {
 		return ReplaceResult{}, conflict()
 	}
-	if current.Value.Equal(value) {
+	if current.value.Equal(value) {
 		return ReplaceResult{Status: Unchanged, Entry: *current}, nil
 	}
-	revision, err := nextRevision(current.Revision)
+	revision, err := nextRevision(current.revision)
 	if err != nil {
 		return ReplaceResult{}, err
 	}
-	entry := Entry{Scope: scope, Key: key, Value: value, Revision: revision}
-	return ReplaceResult{Status: Changed, Entry: entry, Event: &Event{Name: "preference.changed", Scope: scope, Key: key, Value: value, HasValue: true, Revision: revision}}, nil
+	entry := Entry{scope: scope, key: key, value: value, revision: revision}
+	return ReplaceResult{Status: Changed, Entry: entry, Event: changedEvent(entry)}, nil
 }
 
+// DecideRemove validates inputs, treats an absent entry as a successful no-op,
+// and otherwise requires the exact current revision. It never mutates current.
 func DecideRemove(current *Entry, scope Scope, key Key, expected Expected) (RemoveResult, error) {
 	if !scope.Valid() {
 		return RemoveResult{}, invalid("preferences.invalid_scope")
@@ -213,27 +359,63 @@ func DecideRemove(current *Entry, scope Scope, key Key, expected Expected) (Remo
 	if current == nil {
 		return RemoveResult{}, nil
 	}
-	if !current.Valid() || current.Scope != scope || current.Key != key {
-		return RemoveResult{}, invalid("preferences.invalid_entry")
+	if err := validateCurrent(*current, scope, key); err != nil {
+		return RemoveResult{}, err
 	}
-	if !expected.exists || expected.revision != current.Revision {
+	if !expected.matches(current.revision) {
 		return RemoveResult{}, conflict()
 	}
-	revision, err := nextRevision(current.Revision)
+	revision, err := nextRevision(current.revision)
 	if err != nil {
 		return RemoveResult{}, err
 	}
-	return RemoveResult{Removed: true, Revision: revision, Event: &Event{Name: "preference.removed", Scope: scope, Key: key, Revision: revision}}, nil
+	event := &Event{name: RemovedEvent, scope: scope, key: key, revision: revision}
+	return RemoveResult{Removed: true, Revision: revision, Event: event}, nil
+}
+
+func changedEvent(entry Entry) *Event {
+	return &Event{
+		name:     ChangedEvent,
+		scope:    entry.scope,
+		key:      entry.key,
+		value:    entry.value,
+		hasValue: true,
+		revision: entry.revision,
+	}
+}
+
+func validateInput(scope Scope, key Key, value Value) error {
+	if !scope.Valid() {
+		return invalid("preferences.invalid_scope")
+	}
+	if !key.Valid() {
+		return invalid("preferences.invalid_key")
+	}
+	if !value.Valid() {
+		return invalid("preferences.invalid_value")
+	}
+	return nil
+}
+
+func validateCurrent(current Entry, scope Scope, key Key) error {
+	if !current.Valid() || current.scope != scope || current.key != key {
+		return invalid("preferences.invalid_entry")
+	}
+	return nil
 }
 
 func nextRevision(current uint64) (uint64, error) {
-	if current == math.MaxUint64 {
-		return 0, invalid("preferences.revision_exhausted")
+	if current == maxRevision {
+		return 0, faults.New(faults.Conflict, "preference revision exhausted").
+			WithType("preferences.revision_exhausted")
 	}
 	return current + 1, nil
 }
 
-func invalid(typ string) error { return faults.New(faults.Invalid, "invalid preference").WithType(typ) }
+func invalid(typ string) error {
+	return faults.New(faults.Invalid, "invalid preference input").WithType(typ)
+}
+
 func conflict() error {
-	return faults.New(faults.Conflict, "preference changed").WithType("preferences.conflict")
+	return faults.New(faults.Conflict, "preference revision conflict").WithType("preferences.conflict")
 }

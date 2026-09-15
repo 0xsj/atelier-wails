@@ -1,6 +1,9 @@
 # desktop
 
-Preferences candidate context. Plain request/response mapping. Native framework types stay in host.
+Preferences bounded context. Plain JSON request/response shapes, request
+decoding, outcome encoding and public failure projection with commit status.
+No native framework import; the host facade forwards to `Handler`.
 
-Reserved scaffold; no runtime implementation yet. Add only the files needed by
-the first consuming slice. This directory is not an implemented capability.
+Implemented against [CONTRACT.md](CONTRACT.md) revision 1 (task
+desktop-wire-contract). Scenario tests live in spec_test.go and run over the
+memory adapter and the store fault wrappers.

@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { DropdownMenu as Primitive } from 'bits-ui';
 	import './navigation.css';
+
 	interface Props { label?: string; shortcut?: string; disabled?: boolean; closeOnSelect?: boolean; onSelect?: (event: Event) => void; children?: Snippet; class?: string; }
 	let { label, shortcut, disabled = false, closeOnSelect = true, onSelect, children, class: className }: Props = $props();
 </script>

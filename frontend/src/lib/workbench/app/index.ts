@@ -1,0 +1,12 @@
+export { CommandDispatcher } from './commands/dispatcher';
+export type { CommandHandler, DispatchOutcome } from './commands/dispatcher';
+export { registerWorkbenchCommands, WORKBENCH_COMMANDS } from './commands/defaults';
+export type { WorkbenchCommandHooks } from './commands/defaults';
+export { reachesWorkbench, resolveShortcut, scopeForTarget } from './keybindings/keybindings';
+export type { KeybindingScope, ShortcutEventLike, ShortcutResolution, TargetLike } from './keybindings/keybindings';
+export { canGoBack, canGoForward, currentEntry, EMPTY_HISTORY, forgetView, goBack, goForward, recordVisit } from './navigation/history';
+export type { NavigationHistory } from './navigation/history';
+export { createDebouncedSaver, createJsonSnapshotPort, createMemorySnapshotPort, loadSnapshot } from './restoration/restoration';
+export type { DebouncedSaver, LoadOutcome, Scheduler, SnapshotDocumentPort, SnapshotPort } from './restoration/restoration';
+export { createWorkbenchStore, WorkbenchStore } from './workbench-store';
+export type { CloseRequest, KeyOutcome, WorkbenchState, WorkbenchStoreOptions } from './workbench-store';

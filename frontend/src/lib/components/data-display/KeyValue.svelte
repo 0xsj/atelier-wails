@@ -13,4 +13,12 @@
 	let { items, columns = 1, class: className, ...rest }: Props = $props();
 </script>
 
-<dl {...rest} class="atelier-key-value {className ?? ''}" data-columns={columns}>{#each items as item (item.label)}<div class="atelier-key-value__item"><dt>{item.label}</dt><dd>{item.value}</dd>{#if item.description}<small>{item.description}</small>{/if}</div>{/each}</dl>
+<dl {...rest} class="atelier-key-value {className ?? ''}" data-columns={columns}>
+	{#each items as item (item.label)}
+		<div class="atelier-key-value__item">
+			<dt>{item.label}</dt>
+			<dd>{item.value}</dd>
+			{#if item.description}<small>{item.description}</small>{/if}
+		</div>
+	{/each}
+</dl>
